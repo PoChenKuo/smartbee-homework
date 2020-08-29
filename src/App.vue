@@ -14,6 +14,20 @@ export default {
   }
 };
 </script>
-
 <style>
+body {
+  border: none;
+  margin: 0;
+  padding: 0;
+  background: #333;
+}
+</style>
+<style lang="scss" scoped>
+#app {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100vw;
+  height: 100vh;
+}
 </style>
