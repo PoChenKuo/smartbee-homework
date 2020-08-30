@@ -10,13 +10,15 @@
       />!
     </h3>
 
-    <chat-board />
+    <chat-board :message="boardMessage"/>
     <control-panel @send="sendMessage" @sendImage="sendImage" />
+    <div class="loading" v-if="loading"></div>
   </div>
 </template>
 
 <script>
 import { db, storage } from "../firebase.js";
+import getRandomColor from "../getRandomColor.js";
 import uuid from "../uuid.js";
 import ChatBoard from "./ChatBoard";
 import ControlPanel from "./ControlPanel";
@@ -31,13 +33,14 @@ export default {
   components: { ChatBoard, ControlPanel },
   data() {
     return {
+      loading: false,
       token: uuid(),
       name: "",
       guests: [],
       colors: [],
-      message: [],
       boardMessage: [],
-      ts: Date.now()
+      ts: Date.now(),
+      last_ts: Date.now()
     };
   },
 
@@ -46,18 +49,31 @@ export default {
     console.log(storageRef);
 
     messageRef.on("value", function(snapshot) {
-      console.log(snapshot.val());
+      const list = snapshot.val() && Object.values(snapshot.val()) || [];
+      const newList = list.filter(e => e.ts > _this.last_ts);
+      newList.forEach(e => {
+        if (_this.guests.indexOf(e.name) === -1) {
+          _this.guests.push(e.name);
+          let color = "#000000";
+          do {
+            color = getRandomColor();
+          } while (_this.colors.indexOf(color) !== -1);
+          _this.colors.push(color);
+        }
+      });
+      _this.boardMessage = list.map(e => {
+        let obj = Object.assign({}, e);
+        obj.color = _this.colors[_this.guests.indexOf(e.name)];
+        obj.self = e.uuid === _this.token;
+        return obj;
+      });
+      _this.last_ts = list.length && list[list.length - 1].ts;
     });
   },
   beforeDestroy() {
     messageRef.off("value");
   },
-  watch: {
-    boardMessage() {
-      const data = this.message.reverse().filter(e => e.type);
-      return data;
-    }
-  },
+  watch: {},
   computed: {
     subToken() {
       return this.token.substring(0, 6);
@@ -72,11 +88,7 @@ export default {
           : `John Don (#${this.subToken})`,
         ts: Date.now()
       });
-      console.log(data, ` is ready for firebase`);
-      // if (data.type !== "photo") {
-      // console.log(db);
       db.ref("smartbee-message").push(data);
-      // }
     },
     getImageExt(filename) {
       let ext = filename.match(/(jpg|jpeg|png)$/);
@@ -90,19 +102,7 @@ export default {
       return `smartbee-image/${this.token}-${Date.now()}.${ext}`;
     },
     uploadImageErrorHandel(error) {
-      switch (error.code) {
-        case "storage/unauthorized":
-          // User doesn't have permission to access the object
-          break;
-
-        case "storage/canceled":
-          // User canceled the upload
-          break;
-
-        case "storage/unknown":
-          // Unknown error occurred, inspect error.serverResponse
-          break;
-      }
+      alert("upload error", error.code);
     },
     uploadImageSuccessHandel(ref, type) {
       ref.snapshot.ref.getDownloadURL().then(function(downloadURL) {
@@ -114,6 +114,7 @@ export default {
     },
     sendImage(entry) {
       const name = this.generateUploadNameForImage(entry.data.name);
+      this.loading = true;
       const ref = storageRef.child(name).put(entry.data);
       ref.on(
         "state_changed",
@@ -121,10 +122,11 @@ export default {
           /*snapshot */
         },
         function(error) {
-          this.uploadImageErrorHandel(error);
+          _this.loading = false;
+          _this.uploadImageErrorHandel(error);
         },
         function() {
-          // Upload completed successfully, now we can get the download URL
+          _this.loading = false;
           _this.uploadImageSuccessHandel(ref, entry.type);
         }
       );
@@ -162,6 +164,30 @@ export default {
         font-size: 0.6em;
       }
     }
+  }
+}
+
+.loading {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 100vw;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &::after {
+    content: "";
+    position: relative;
+    width: 300px;
+    height: 300px;
+    background: url("~@/assets/loading.svg");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: cover;
   }
 }
 </style>

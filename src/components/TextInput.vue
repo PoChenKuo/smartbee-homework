@@ -1,6 +1,6 @@
 <template>
   <div class="text-input">
-    <input type="text" v-model="msg" />
+    <input type="text" v-model="msg" @keydown.stop.prevent.enter="send" />
     <font-awesome-icon :class="['sent-button', 'button']" :icon="sendIcon" @click="send" />
   </div>
 </template>
