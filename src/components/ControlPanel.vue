@@ -3,7 +3,7 @@
     <div class="controls">
       <div class="photo-selector">
         <font-awesome-icon :icon="imageIcon" />
-        <input type="file" accept="image/png, image/jpeg" @change.passive="sendImage"/>
+        <input type="file" accept="image/png, image/jpeg" @change.passive="sendImage" />
       </div>
       <font-awesome-icon
         @click="stickEnable=!stickEnable"
@@ -49,13 +49,14 @@ export default {
         data: code
       });
     },
-    sendImage(event){
+    sendImage(event) {
       const files = event.target.files;
-      if( files.length > 0 ){
-        this.send({
-          type:'photo',
-          data:files[0]
-        })
+      if (files.length > 0) {
+        this.$emit("sendImage", {
+          type: "photo",
+          data: files[0]
+        });
+        event.target.value = "";
       }
     }
   }

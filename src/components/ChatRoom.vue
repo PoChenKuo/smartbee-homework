@@ -11,19 +11,21 @@
     </h3>
 
     <chat-board />
-    <control-panel @send="sendMessage" />
+    <control-panel @send="sendMessage" @sendImage="sendImage" />
   </div>
 </template>
 
 <script>
-import { db } from "../db.js";
+import { db, storage } from "../firebase.js";
 import uuid from "../uuid.js";
 import ChatBoard from "./ChatBoard";
 import ControlPanel from "./ControlPanel";
-const messageLEntry = db
-  .ref("message")
+const messageRef = db
+  .ref("smartbee-message")
   .orderByChild("ts")
   .startAt(Date.now(), "ts");
+const storageRef = storage.ref();
+let _this = null;
 export default {
   name: "ChatRoom",
   components: { ChatBoard, ControlPanel },
@@ -40,12 +42,15 @@ export default {
   },
 
   mounted() {
-    messageLEntry.on("value", function(snapshot) {
+    _this = this;
+    console.log(storageRef);
+
+    messageRef.on("value", function(snapshot) {
       console.log(snapshot.val());
     });
   },
   beforeDestroy() {
-    messageLEntry.off("value");
+    messageRef.off("value");
   },
   watch: {
     boardMessage() {
@@ -53,18 +58,76 @@ export default {
       return data;
     }
   },
+  computed: {
+    subToken() {
+      return this.token.substring(0, 6);
+    }
+  },
   methods: {
     sendMessage(entry) {
       const data = Object.assign({}, entry, {
         uuid: this.token,
-        name: this.name || "John Don(unknown)",
+        name: this.name
+          ? `${this.name} (#${this.subToken})`
+          : `John Don (#${this.subToken})`,
         ts: Date.now()
       });
       console.log(data, ` is ready for firebase`);
-      if (data.type !== "photo") {
-        console.log(db);
-        db.ref("message").push(data);
+      // if (data.type !== "photo") {
+      // console.log(db);
+      db.ref("smartbee-message").push(data);
+      // }
+    },
+    getImageExt(filename) {
+      let ext = filename.match(/(jpg|jpeg|png)$/);
+      if (ext !== null) {
+        ext = ext[0];
       }
+      return ext;
+    },
+    generateUploadNameForImage(name) {
+      const ext = this.getImageExt(name);
+      return `smartbee-image/${this.token}-${Date.now()}.${ext}`;
+    },
+    uploadImageErrorHandel(error) {
+      switch (error.code) {
+        case "storage/unauthorized":
+          // User doesn't have permission to access the object
+          break;
+
+        case "storage/canceled":
+          // User canceled the upload
+          break;
+
+        case "storage/unknown":
+          // Unknown error occurred, inspect error.serverResponse
+          break;
+      }
+    },
+    uploadImageSuccessHandel(ref, type) {
+      ref.snapshot.ref.getDownloadURL().then(function(downloadURL) {
+        _this.sendMessage({
+          type: type,
+          data: downloadURL
+        });
+      });
+    },
+    sendImage(entry) {
+      const name = this.generateUploadNameForImage(entry.data.name);
+      const ref = storageRef.child(name).put(entry.data);
+      ref.on(
+        "state_changed",
+        function() {
+          /*snapshot */
+        },
+        function(error) {
+          this.uploadImageErrorHandel(error);
+        },
+        function() {
+          // Upload completed successfully, now we can get the download URL
+          _this.uploadImageSuccessHandel(ref, entry.type);
+        }
+      );
     }
   }
 };
