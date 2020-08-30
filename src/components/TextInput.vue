@@ -1,7 +1,7 @@
 <template>
   <div class="text-input">
-    <input type="text" />
-    <font-awesome-icon :class="['sent-button', 'button']" :icon="sendIcon" />
+    <input type="text" v-model="msg" />
+    <font-awesome-icon :class="['sent-button', 'button']" :icon="sendIcon" @click="send" />
   </div>
 </template>
 
@@ -12,10 +12,19 @@ export default {
   name: "TextInput",
   data() {
     return {
-      sendIcon: faPaperPlane
+      sendIcon: faPaperPlane,
+      msg: ""
     };
   },
-  mounted() {}
+  mounted() {},
+  methods: {
+    send() {
+      if (this.msg.length) {
+        this.$emit("send", this.msg);
+        this.msg = "";
+      }
+    }
+  }
 };
 </script>
 

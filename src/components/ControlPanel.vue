@@ -7,7 +7,7 @@
         :class="{active:stickEnable}"
         :icon="stickIcon"
       />
-      <text-input />
+      <text-input @send="sendText"/>
     </div>
     <stick-panel @send="sendStick" v-if="stickEnable" />
   </div>
@@ -31,7 +31,9 @@ export default {
   mounted() {},
   methods: {
     send() {},
-    sendText() {},
+    sendText(message) {
+      console.log(message);
+    },
     sendStick(code) {
       this.stickEnable = false;
       console.log(code);
