@@ -2,7 +2,11 @@
   <div class="control-panel">
     <div class="controls">
       <font-awesome-icon :icon="imageIcon" />
-      <font-awesome-icon :icon="stickIcon" />
+      <font-awesome-icon
+        @click="stickEnable=!stickEnable"
+        :class="{active:stickEnable}"
+        :icon="stickIcon"
+      />
       <text-input />
     </div>
     <stick-panel @send="sendStick" v-if="stickEnable" />
@@ -28,8 +32,9 @@ export default {
   methods: {
     send() {},
     sendText() {},
-    sendStick(entry) {
-      console.come(entry);
+    sendStick(code) {
+      this.stickEnable = false;
+      console.log(code);
     }
   }
 };
@@ -59,6 +64,9 @@ export default {
       font-size: 30px;
       margin: 5px 15px;
       cursor: pointer;
+      &.active {
+        color: #555;
+      }
     }
     .text-input {
       width: calc(100% - 120px);
