@@ -16,7 +16,8 @@ export default {
 .chat-board {
   width: 100%;
   height: calc(100% - 150px);
-  background: #fff;
+      background: radial-gradient(white, #f5f9c8);
+
   border-radius: 15px 15px 0 0;
   margin-top: 30px;
   padding-bottom: 30px;

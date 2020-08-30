@@ -29,5 +29,7 @@ body {
   justify-content: center;
   width: 100vw;
   height: 100vh;
+  padding: 5px;
+  box-sizing: border-box;
 }
 </style>
