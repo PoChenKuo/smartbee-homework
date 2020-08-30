@@ -11,26 +11,61 @@
     </h3>
 
     <chat-board />
-    <control-panel />
+    <control-panel @send="sendMessage" />
   </div>
 </template>
 
 <script>
-// import {db} from '../db.js'
+import { db } from "../db.js";
 import uuid from "../uuid.js";
 import ChatBoard from "./ChatBoard";
 import ControlPanel from "./ControlPanel";
+const messageLEntry = db
+  .ref("message")
+  .orderByChild("ts")
+  .startAt(Date.now(), "ts");
 export default {
   name: "ChatRoom",
   components: { ChatBoard, ControlPanel },
   data() {
     return {
       token: uuid(),
-      name: ""
+      name: "",
+      guests: [],
+      colors: [],
+      message: [],
+      boardMessage: [],
+      ts: Date.now()
     };
   },
+
   mounted() {
-    // console.log(this.token);
+    messageLEntry.on("value", function(snapshot) {
+      console.log(snapshot.val());
+    });
+  },
+  beforeDestroy() {
+    messageLEntry.off("value");
+  },
+  watch: {
+    boardMessage() {
+      const data = this.message.reverse().filter(e => e.type);
+      return data;
+    }
+  },
+  methods: {
+    sendMessage(entry) {
+      const data = Object.assign({}, entry, {
+        uuid: this.token,
+        name: this.name || "John Don(unknown)",
+        ts: Date.now()
+      });
+      console.log(data, ` is ready for firebase`);
+      if (data.type !== "photo") {
+        console.log(db);
+        db.ref("message").push(data);
+      }
+    }
   }
 };
 </script>

@@ -1,13 +1,16 @@
 <template>
   <div class="control-panel">
     <div class="controls">
-      <font-awesome-icon :icon="imageIcon" />
+      <div class="photo-selector">
+        <font-awesome-icon :icon="imageIcon" />
+        <input type="file" accept="image/png, image/jpeg" @change.passive="sendImage"/>
+      </div>
       <font-awesome-icon
         @click="stickEnable=!stickEnable"
         :class="{active:stickEnable}"
         :icon="stickIcon"
       />
-      <text-input @send="sendText"/>
+      <text-input @send="sendText" />
     </div>
     <stick-panel @send="sendStick" v-if="stickEnable" />
   </div>
@@ -30,13 +33,30 @@ export default {
   },
   mounted() {},
   methods: {
-    send() {},
+    send(entry) {
+      this.$emit("send", entry);
+    },
     sendText(message) {
-      console.log(message);
+      this.send({
+        type: "text",
+        data: message
+      });
     },
     sendStick(code) {
       this.stickEnable = false;
-      console.log(code);
+      this.send({
+        type: "stick",
+        data: code
+      });
+    },
+    sendImage(event){
+      const files = event.target.files;
+      if( files.length > 0 ){
+        this.send({
+          type:'photo',
+          data:files[0]
+        })
+      }
     }
   }
 };
@@ -61,6 +81,23 @@ export default {
     align-items: center;
     justify-content: flex-start;
     position: relative;
+
+    .photo-selector {
+      width: auto;
+      height: auto;
+      overflow: height;
+      position: relative;
+      input {
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        outline: none;
+        z-index: 2;
+        position: absolute;
+        top: 0;
+        left: 0;
+      }
+    }
     .svg-inline--fa {
       color: #777;
       font-size: 30px;

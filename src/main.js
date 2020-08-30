@@ -1,10 +1,12 @@
 import Vue from "vue";
 import App from "./App.vue";
 
-import { firestorePlugin } from "vuefire";
+// import { rtdbPlugin } from "vuefire";
+// import { rtdbPlugin as VueFire } from 'vuefire'
+
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
-Vue.use(firestorePlugin);
+// Vue.use(VueFire);
 Vue.component("font-awesome-icon", FontAwesomeIcon);
 
 Vue.config.devtools = true;
