@@ -15,10 +15,15 @@ export default {
 };
 </script>
 <style>
-body {
+html,
+body{
+  height:100%;
+  width:100%;
   border: none;
   margin: 0;
   padding: 0;
+}
+body {  
   background: #333;
 }
 </style>
@@ -28,8 +33,8 @@ body {
   align-items: center;
   justify-content: center;
   width: 100vw;
-  height: 100vh;
-  padding: 5px;
+  height: 100%;
+  padding: 0 5px;
   box-sizing: border-box;
 }
 </style>
