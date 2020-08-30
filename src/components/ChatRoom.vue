@@ -10,7 +10,7 @@
       />!
     </h3>
 
-    <chat-board :message="boardMessage"/>
+    <chat-board :message="boardMessage" />
     <control-panel @send="sendMessage" @sendImage="sendImage" />
     <div class="loading" v-if="loading"></div>
   </div>
@@ -39,35 +39,15 @@ export default {
       guests: [],
       colors: [],
       boardMessage: [],
-      ts: Date.now(),
       last_ts: Date.now()
     };
   },
 
   mounted() {
     _this = this;
-    console.log(storageRef);
 
     messageRef.on("value", function(snapshot) {
-      const list = snapshot.val() && Object.values(snapshot.val()) || [];
-      const newList = list.filter(e => e.ts > _this.last_ts);
-      newList.forEach(e => {
-        if (_this.guests.indexOf(e.name) === -1) {
-          _this.guests.push(e.name);
-          let color = "#000000";
-          do {
-            color = getRandomColor();
-          } while (_this.colors.indexOf(color) !== -1);
-          _this.colors.push(color);
-        }
-      });
-      _this.boardMessage = list.map(e => {
-        let obj = Object.assign({}, e);
-        obj.color = _this.colors[_this.guests.indexOf(e.name)];
-        obj.self = e.uuid === _this.token;
-        return obj;
-      });
-      _this.last_ts = list.length && list[list.length - 1].ts;
+      _this.receiveHandel(snapshot);
     });
   },
   beforeDestroy() {
@@ -80,6 +60,33 @@ export default {
     }
   },
   methods: {
+    newGuestRecord(list) {
+      list.forEach(e => {
+        if (_this.guests.indexOf(e.name) === -1) {
+          _this.guests.push(e.name);
+          let color = "#000000";
+          do {
+            color = getRandomColor();
+          } while (_this.colors.indexOf(color) !== -1);
+          _this.colors.push(color);
+        }
+      });
+    },
+    assignUniqueAttribueforMessage(list) {
+      this.boardMessage = list.map(e => {
+        let obj = Object.assign({}, e);
+        obj.color = _this.colors[_this.guests.indexOf(e.name)];
+        obj.self = e.uuid === _this.token;
+        return obj;
+      });
+    },
+    receiveHandel(snapshot) {
+      const list = (snapshot.val() && Object.values(snapshot.val())) || [];
+      const newList = list.filter(e => e.ts > _this.last_ts);
+      this.newGuestRecord(newList);
+      this.assignUniqueAttribueforMessage(list);
+      _this.last_ts = list.length && list[list.length - 1].ts;
+    },
     sendMessage(entry) {
       const data = Object.assign({}, entry, {
         uuid: this.token,
